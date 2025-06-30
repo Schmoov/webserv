@@ -18,7 +18,6 @@ $(NAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
-	@ mkdir -p $(OBJ_DIR)
 	@ mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@ 
 
@@ -32,4 +31,4 @@ fclean: clean
 
 re: fclean all
 
-PHONY: all clean fclean re bonus
+.PHONY: all clean fclean re bonus
