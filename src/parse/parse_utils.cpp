@@ -83,34 +83,6 @@ void deleteQuotedString(string& s) {
 	s.erase(0, i+1);
 }
 
-void toLower(string& s, size_t start, size_t len) {
-	for (size_t i = start; i < s.size() && i-start < len; i++)
-		s[i] = tolower(s[i]);
-}
-
-//Calling with 1 param sets base to 10
-size_t extractSize(string& s, int base) {
-	size_t pos;
-	if (base == 16)
-		pos = s.find_first_not_of(base16);
-	else
-		pos = s.find_first_not_of(base10);
-	if (pos == npos)
-		pos = s.size();
-	stringstream ss(s.substr(0,pos));
-	s.erase(0, pos);
-	size_t res;
-	if (base == 16)
-		ss >> std::hex;
-	if (!(ss>>res)) {
-		if (pos)
-			throw std::overflow_error("Bad size_t");
-		else
-			throw std::invalid_argument("Bad size_t");
-	}
-	return res;
-}
-
 size_t peekSize(string& s, int base) {
 	size_t pos;
 	if (base == 16)
@@ -137,11 +109,4 @@ void earlyResponse(Conversation& conv, StatusCode status, bool close) {
 	conv.state = EXEC;
 	conv.resp.status = status;
 	conv.resp.shouldClose = close;
-}
-
-std::string intToString(int n)
-{
-	std::stringstream ss;
-	ss << n;
-	return ss.str();
 }

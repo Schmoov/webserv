@@ -20,10 +20,14 @@ struct Location {
 	std::map<std::string, std::string> cgiHandlers;
 };
 
-struct Config {
+struct ServerConfig {
 	unsigned int	port;
 	std::string		host;
 	std::string		server_name;
 	std::map<StatusCode, std::string> errorPagesPath;
 	std::map<std::string, Location> pathToLoc;
+};
+
+class ConfigParser {
+private:
 };

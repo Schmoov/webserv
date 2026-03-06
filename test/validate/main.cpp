@@ -18,7 +18,7 @@ Conversation validConv() {
 	c.resp.status = NOT_A_STATUS_CODE;
 	c.resp.shouldClose = false;
 
-	c.conf = new Config;
+	c.conf = new ServerConfig;
 	c.conf->port = 8080;
 	c.conf->host = "www.test.io";
 

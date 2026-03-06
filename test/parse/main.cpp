@@ -144,4 +144,4 @@ int main() {
     std::cout << "All tests passed successfully.\n";
     return 0;
 }
-//c++ -Wall -Wextra -std=c++98 -DPARSE_DEBUG -Iinc src/parse/*.cpp  test/parse/main.cpp && ./a.out
+//c++ -Wall -Wextra -std=c++98 -DPARSE_DEBUG -Iinc src/parse/*.cpp src/*.cpp  test/parse/main.cpp && ./a.out

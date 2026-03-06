@@ -1,6 +1,5 @@
 #pragma once
 #include "../parse/Parser.hpp"
-#include "../serverConfig.hpp"
 #include <vector>
 
 const std::string pchar = alpha + base10 + "-._~!$&'()*+,;=";
