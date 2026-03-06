@@ -22,8 +22,10 @@ struct Location {
 
 struct ServerConfig {
 	unsigned int	port;
+	std::string root;
 	std::string		host;
 	std::string		server_name;
+	size_t clientMaxBodySize;
 	std::map<StatusCode, std::string> errorPagesPath;
 	std::map<std::string, Location> pathToLoc;
 };
