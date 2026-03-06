@@ -30,4 +30,12 @@ fclean: clean
 
 re: fclean all
 
+testParse:
+	c++ -Wall -Wextra -std=c++98 -DPARSE_DEBUG -Iinc src/parse/*.cpp src/*.cpp  test/parse/main.cpp && ./a.out
+	rm a.out
+
+testVal:
+	c++ -Wall -Wextra -std=c++98 -Iinc src/validate/*.cpp src/parse/*.cpp src/*.cpp  test/validate/main.cpp && ./a.out
+	rm a.out
+
 .PHONY: all clean fclean re bonus
