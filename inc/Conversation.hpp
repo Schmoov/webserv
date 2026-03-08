@@ -17,6 +17,8 @@ public:
 	std::string pathOnDisk;
 	bool hasQuery;
 	std::string query;
+
+	Request() : bodyLeft(0), hasQuery(false) {}
 };
 
 struct Response {
@@ -27,6 +29,8 @@ struct Response {
 	mapStr header;
 	std::string body;
 	*/
+	
+	Response() : status(NOT_A_STATUS_CODE), shouldClose(false) {}
 };
 
 //Forward declaration + pointer to respect include hierarchy

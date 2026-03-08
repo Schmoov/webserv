@@ -8,7 +8,7 @@
 using namespace std;
 
 map<int, ServerConfig> parseConfig(string path) {
-	ifstream file(path);
+	ifstream file(path.c_str());
 	if (!file) {
 		cerr << "Cannot open: " << path << endl;
 		configThrow("Bad path");
@@ -135,9 +135,18 @@ void parseLocation(ServerConfig& conf, string& line, ifstream& file) {
 			cerr << "Unknown directive in location: " << key << endl;
 			configThrow("Invalid location directive");
 		}
-
 		line = parseNextLine(file);
 	}
 
+	configParseCheckCGI(loc);
 	conf.pathToLoc[name] = loc;
+}
+
+void configParseCheckCGI(Location& loc) {
+    if (loc.CgiExt.size() != loc.CgiPath.size()) {
+        cerr << "Must define 1 (one) CGI ext per binary\n";
+        configThrow("CGI Mismatch");
+    }
+    for (int i = 0; i < (int)loc.CgiExt.size(); i++)
+        loc.cgiHandler[loc.CgiExt[i]] = loc.CgiPath[i];
 }

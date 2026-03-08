@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../../inc/configParse/configParse.hpp"
 #include <string>
 #include <sstream>
@@ -9,7 +7,6 @@
 
 using namespace std;
 
-// Parses "allow_methods GET POST ..." into loc.allowedMethods
 void configParseAllowMethods(Location& loc, string& line) {
     stringstream ss(line);
     string token;
@@ -25,47 +22,40 @@ void configParseAllowMethods(Location& loc, string& line) {
     }
 }
 
-// Parses "autoindex on|off" into loc.autoIndex
 void configParseAutoIndex(Location& loc, string& line) {
     stringstream ss(line);
+    string isOn;
     string token;
     ss >> token; // autoindex
 
-    if (!(ss >> token) || (token != "on" && token != "off") || (ss >> token)) {
+    if (!(ss >> isOn) || (isOn != "on" && isOn != "off") || (ss >> token)) {
         configErrorLog("autoindex on|off", line);
     }
 
-    loc.autoIndex = (token == "on");
+    loc.autoIndex = (isOn == "on");
 }
 
-// Parses "index index.html ..." into loc.index (takes first token)
 void configParseIndex(Location& loc, string& line) {
     stringstream ss(line);
     string token;
     ss >> token; // index
 
-    if (!(ss >> token) || (ss >> token)) { // only one index allowed
+    if (!(ss >> loc.index) || (ss >> token)) {
         configErrorLog("index <file>", line);
     }
-
-    loc.index = token;
 }
 
-// Parses "root /some/path" into loc.root
 void configParseRoot(Location& loc, string& line) {
     stringstream ss(line);
     string token;
     ss >> token; // root
 
-    if (!(ss >> token) || (ss >> token)) {
+    if (!(ss >> loc.root) || (ss >> token)) {
         configErrorLog("root <path>", line);
     }
-
-    loc.root = token;
     loc.hasRoot = true;
 }
 
-// Parses "return 301 /new/path" into loc.redirCode and loc.redirURL
 void configParseReturn(Location& loc, string& line) {
     stringstream ss(line);
     string token;
@@ -82,41 +72,29 @@ void configParseReturn(Location& loc, string& line) {
     } catch (...) {
         configErrorLog("return <code> <url>", line);
     }
+    loc.redirCode = (StatusCode)code;
 
-    if (!(ss >> token) || (ss >> token)) {
+    if (!(ss >> loc.redirURL) || (ss >> token)) {
         configErrorLog("return <code> <url>", line);
     }
 
     loc.hasRedir = true;
-    loc.redirCode = (StatusCode)code;
-    loc.redirURL = token;
 }
 
-// Parses "cgi_path /usr/bin/php" into loc.cgiHandlers["default"] = path
 void configParseCgiPath(Location& loc, string& line) {
     stringstream ss(line);
-    string token, path;
+    string token;
     ss >> token; // cgi_path
-    if (!(ss >> path) || (ss >> token)) {
-        configErrorLog("cgi_path <path>", line);
+    while (ss >> token) {
+        loc.CgiPath.push_back(token);
     }
-
-    loc.cgiHandlers["default"] = path;
 }
 
-// Parses "cgi_ext .php" into loc.cgiHandlers["ext"] = ext
 void configParseCgiExt(Location& loc, string& line) {
     stringstream ss(line);
-    string token, ext;
+    string token;
     ss >> token; // cgi_ext
-    if (!(ss >> ext) || (ss >> token)) {
-        configErrorLog("cgi_ext <ext>", line);
+    while (ss >> token) {
+        loc.CgiExt.push_back(token);
     }
-
-    // associate extension with existing default CGI path
-    if (loc.cgiHandlers.find("default") == loc.cgiHandlers.end()) {
-        configErrorLog("cgi_ext defined before cgi_path", line);
-    }
-
-    loc.cgiHandlers[ext] = loc.cgiHandlers["default"];
 }

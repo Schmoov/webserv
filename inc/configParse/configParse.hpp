@@ -9,6 +9,8 @@ std::map<int, ServerConfig> parseConfig(std::string path);
 
 bool parseServer(std::map<int, ServerConfig>& portToConf, std::ifstream& file);
 void parseServerParams(ServerConfig& conf, std::ifstream& file);
+void parseLocation(ServerConfig& conf, std::string& line, std::ifstream& file);
+void configParseCheckCGI(Location& loc);
 
 int parseServerPort(std::ifstream& file);
 void configParseServerName(ServerConfig& conf, std::string& line);

@@ -17,7 +17,15 @@ struct Location {
 	StatusCode redirCode;
 	std::string redirURL;
 	std::string uploadDir;
-	std::map<std::string, std::string> cgiHandlers;
+	std::map<std::string, std::string> cgiHandler; //"py"-->"/bin/python3"
+
+	//private
+	std::vector<std::string> CgiExt;
+	std::vector<std::string> CgiPath;
+
+	Location() : hasRoot(false), autoIndex(false), hasRedir(false),
+		redirCode(NOT_A_STATUS_CODE) {}
+
 };
 
 struct ServerConfig {
@@ -28,4 +36,5 @@ struct ServerConfig {
 	size_t clientMaxBodySize;
 	std::map<StatusCode, std::string> errorPagesPath;
 	std::map<std::string, Location> pathToLoc;
+	ServerConfig() : port(0), clientMaxBodySize(1e6) {}
 };
