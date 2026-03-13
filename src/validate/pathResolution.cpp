@@ -4,7 +4,9 @@ using namespace std;
 typedef map<string, Location>::iterator locIt;
 
 void Validator::validateUri(Conversation& conv) {
-	if (conv.req.uri[0] != '/')
+	conv.req.pathOnDisk = conv.req.uri;
+
+	if (conv.req.pathOnDisk[0] != '/')
 		stripHost(conv);
 	if (conv.state != VALIDATE)
 		return;
@@ -22,7 +24,7 @@ void Validator::validateUri(Conversation& conv) {
 }
 
 void Validator::stripHost(Conversation& conv) {
-	string& s = conv.req.uri;
+	string& s = conv.req.pathOnDisk;
 	toLower(s, 0, 7);
 	if (s.compare(0, 7,"http://"))
 		return skipBody(conv, BAD_REQUEST);
@@ -50,7 +52,7 @@ void Validator::stripHost(Conversation& conv) {
 }
 
 vector<string> Validator::parsePath(Conversation& conv) {
-	string& s = conv.req.uri;
+	string& s = conv.req.pathOnDisk;
 	vector<string> seg;
 	while (s.size() && s[0] == '/') {
 		while (s.size() && s[0] == '/')
@@ -105,6 +107,9 @@ void Validator::segmentLinter(Conversation& conv, vector<string>& seg) {
 
 void Validator::queryLinter(Conversation& conv) {
 	string& quer = conv.req.query;
+	if (quer.size())
+		conv.req.uri.erase(conv.req.uri.size() - quer.size() - 1,
+				quer.size() + 1);
 	for (size_t j = 0; j < quer.size();) {
 		if (quer[j] == '%') {
 			if (j + 2 >= quer.size() || base16.find(quer[j+1]) == npos
@@ -143,19 +148,19 @@ size_t Validator::matchLoc(Conversation& conv, vector<string>& seg) {
 }
 
 void Validator::assembleUri(Conversation& conv, vector<string>& seg, size_t match) {
-	conv.req.uri = "";
+	conv.req.pathOnDisk = "";
 	size_t i = 0;
 	if (conv.loc->hasRedir) {
-		conv.req.uri += conv.loc->redirURL;
+		conv.req.pathOnDisk += conv.loc->redirURL;
 		conv.resp.status = conv.loc->redirCode;
 		i = match;
 	}
 	if (conv.loc->hasRoot) {
-		conv.req.uri += conv.loc->root;
+		conv.req.pathOnDisk += conv.loc->root;
 		i = match;
 	}
 	while (i < seg.size()) {
-		conv.req.uri += '/' + seg[i];
+		conv.req.pathOnDisk += '/' + seg[i];
 		i++;
 	}
 }

@@ -141,7 +141,7 @@ int main() {
     test_chunked_body_parsing();
     test_multiple_requests_with_skip_body();
 
-    std::cout << "All tests passed successfully.\n";
+	cerr << "\e[0;32m PARSE OK\n\e[0m";
     return 0;
 }
 //c++ -Wall -Wextra -std=c++98 -DPARSE_DEBUG -Iinc src/parse/*.cpp src/*.cpp  test/parse/main.cpp && ./a.out

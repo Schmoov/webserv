@@ -148,6 +148,6 @@ int main() {
     test_allow_methods();
     test_return_redirect();
 
-    cout << "All config parser tests passed successfully.\n";
+	cerr << "\e[0;32m CONF OK\n\e[0m";
     return 0;
 }

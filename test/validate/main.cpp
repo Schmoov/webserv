@@ -60,8 +60,8 @@ void test_happy_path() {
 	v.validate(c);
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dir1"]);
-	cout << c.req.uri << endl;
 	assert(c.req.uri == "/dir1/dir2/file1");
+	assert(c.req.pathOnDisk == "/dir1/dir2/file1");
 	assert(c.req.hasQuery == true);
 	assert(c.req.query == "query");
 	assert(c.req.bodyLeft == 5);
@@ -73,7 +73,8 @@ void test_happy_path() {
 	v.validate(c);
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dir1"]);
-	assert(c.req.uri == "/dir1/dir2/file1");
+	assert(c.req.uri == "http://www.test.io:8080/dir1/dir2/file1");
+	assert(c.req.pathOnDisk == "/dir1/dir2/file1");
 	assert(c.req.hasQuery == true);
 	assert(c.req.query == "query");
 	assert(c.req.bodyLeft == 5);
@@ -88,6 +89,7 @@ void test_happy_path() {
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/"]);
 	assert(c.req.uri == "/dir1a/banana.jpg");
+	assert(c.req.pathOnDisk == "/dir1a/banana.jpg");
 	assert(c.req.hasQuery == false);
 	assert(c.resp.status == NOT_A_STATUS_CODE);
 	assert(c.resp.shouldClose == false);
@@ -98,7 +100,8 @@ void test_happy_path() {
 	v.validate(c);
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dirRoot"]);
-	assert(c.req.uri == "/another_dir/file");
+	assert(c.req.uri == "/dirRoot/file");
+	assert(c.req.pathOnDisk == "/another_dir/file");
 	assert(c.req.bodyLeft == 5);
 	assert(c.resp.status == NOT_A_STATUS_CODE);
 	assert(c.resp.shouldClose == false);
@@ -109,7 +112,8 @@ void test_happy_path() {
 	v.validate(c);
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dir3"]);
-	assert(c.req.uri == "https://github.com/xXx_roXor_xXx");
+	assert(c.req.uri == "/dir3/xXx_roXor_xXx");
+	assert(c.req.pathOnDisk == "https://github.com/xXx_roXor_xXx"); // ???
 	assert(c.req.bodyLeft == 5);
 	assert(c.resp.status == MOVED_PERMANENTLY);
 	assert(c.resp.shouldClose == false);
@@ -177,5 +181,6 @@ int main() {
 	cerr << "test_happy_path PASSED\n";
 	test_sad_path();
 	cerr << "test_sad_path PASSED\n";
+	cerr << "\e[0;32m VAL OK\n\e[0m";
 }
 //c++ -Wall -Wextra -std=c++98 -Iinc src/validate/*.cpp src/parse/*.cpp  test/validate/main.cpp && ./a.out  

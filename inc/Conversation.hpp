@@ -39,10 +39,6 @@ class Reader;
 class Validator;
 
 class Conversation {
-private:
-	Parser *parser;
-	Reader *reader;
-	Validator *validator;
 public:
 	int fd;
 	ServerConfig *conf;
@@ -51,4 +47,8 @@ public:
 	Response resp;
 	ConvState state;
 	std::string buf;
+
+	Parser *parser;
+	Reader *reader;
+	Validator *validator;
 };

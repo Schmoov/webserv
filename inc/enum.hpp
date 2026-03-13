@@ -1,16 +1,29 @@
 #pragma once
 
 enum ConvState {
+	//reader
 	READ_CLIENT,
-	WRITE_CLIENT,
 	EOF_CLIENT,
-	FINISH,
-	READ_EXEC,
-	PARSE,
-	PARSE_BODY,
+	FINISH, //Free ressources, set by reader when socket errors
+			//set by parser when client gracefully closed connection
+			//Should be set after successfully sending a response with
+			//connection: closed
+
+	//parser
+	PARSE, // NEEDS TO BE SET AFTER SENDING RESPONSE !
+	PARSE_BODY, // NEEDS TO BE SET AFTER ANSWERING 100 to a expect continue
+
 	VALIDATE,
+
+	EXEC, // set by validator any time we should respond
+		  // may need actual execution may be just 400 connection close
+	
+	TIMEOUT_STATE, // TO DO
+
+	//old states for inspiration no code relies on them
 	RESPONSE,
-	EXEC,
+	WRITE_CLIENT, //this is in stateManager.cpp
+	READ_EXEC,
 	TO_READ,
 	TO_SEND,
 	IS_SENT
