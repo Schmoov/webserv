@@ -3,8 +3,9 @@
 #include "../../inc/parse/Parser.hpp"
 #include "../../inc/validate/Validator.hpp" //calls needs complete type of conv subclass
 
+#include <iostream>
 //You can do *func if you prefer
-void stateManager(Conversation& conv) {
+void manage(Conversation& conv) {
 
 	//forgot about that : READ_CLIENT means both can read and need read
 	//The first time manager sees IO state it comes from epoll so
@@ -29,7 +30,7 @@ void stateManager(Conversation& conv) {
 			conv.validator->validate(conv);
 		if (conv.state == READ_CLIENT
 				|| conv.state == WRITE_CLIENT
-				|| conv.state == FINISH)
+				|| conv.state == FINISH || conv.state == EXEC)
 			break;
 	}
 }

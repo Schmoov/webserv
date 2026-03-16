@@ -51,4 +51,6 @@ public:
 	Parser *parser;
 	Reader *reader;
 	Validator *validator;
+	Conversation();
 };
+void manage(Conversation& conv);

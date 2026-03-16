@@ -1,6 +1,7 @@
 #include "../../inc/parse/Parser.hpp"
 #include <exception>
 #include <stdexcept>
+#include <iostream>
 
 using namespace std;
 using namespace ParserRoutine;

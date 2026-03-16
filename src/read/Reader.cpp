@@ -1,6 +1,7 @@
 #include "../../inc/read/Reader.hpp"
 #include <string>
 #include <unistd.h>
+#include <iostream>
 
 using namespace std;
 
@@ -18,6 +19,6 @@ void Reader::read(Conversation& conv) {
 		conv.state = EOF_CLIENT;
 		return;
 	}
-	conv.buf.insert(0, toAdd, byteRead);
+	conv.buf.append( toAdd, byteRead);
 	conv.state = PARSE;
 }

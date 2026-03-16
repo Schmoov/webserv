@@ -5,6 +5,7 @@
 using namespace std;
 
 void Validator::validate(Conversation& conv) {
+
 	validateCritical(conv);
 	if (conv.state != VALIDATE)
 		return;
