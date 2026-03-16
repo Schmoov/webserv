@@ -180,6 +180,7 @@ int main(int argc, char** argv)
                     printf("HasQuery:%d\n", conversations[fd].req.hasQuery);
                     printf("Query:%s\n", conversations[fd].req.query.c_str());
                     printf("State:%d\n", conversations[fd].state);
+                    printf("Status:%d\n", conversations[fd].resp.status);
                     printf("////////DEBUG END///////\n");
 
 
