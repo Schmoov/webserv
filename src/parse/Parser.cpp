@@ -73,8 +73,10 @@ void Parser::parseBodyChunked(Conversation& conv) {
 	string& s = conv.buf;
 	while (true) {
 		size_t pos = s.find("\r\n");
-		if (pos == npos && s.size() <= bodyMax)
+		if (pos == npos && s.size() <= bodyMax) {
+			conv.state = READ_CLIENT;
 			return;
+		}
 		if ((pos != npos && pos > bodyMax) || pos == npos)
 			return earlyResponse(conv, BAD_REQUEST);
 
