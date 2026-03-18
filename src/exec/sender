@@ -1,0 +1,1 @@
+echo -e "POST ./ HTTP/1.1\r\nContent-Length: 5\r\n\r\nHello" | nc localhost 8080

@@ -45,4 +45,7 @@ testConf:
 	rm -f test/configParse/test*.conf
 	rm a.out
 
+testPaul: 
+	g++ $(shell find src -name '*.cpp')
+
 .PHONY: all clean fclean re bonus test testParse testVal testConf

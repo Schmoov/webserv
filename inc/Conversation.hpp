@@ -21,10 +21,23 @@ public:
 	Request() : bodyLeft(0), hasQuery(false) {}
 };
 
+struct Cgi
+{
+	pid_t pid;
+	int pipe_in;
+	int pipe_out;
+	int written;
+	std::string *to_write;
+	std::string raw_output;
+};
+
 struct Response {
 	StatusCode status; // Used by parse to communicate failure
 	bool shouldClose;
 	std::string location;
+	std::string content;
+	size_t content_size; //Its the content size of the total response, not just the body
+	Cgi cgi_infos;
 	/*
 	mapStr header;
 	std::string body;

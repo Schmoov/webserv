@@ -1,65 +1,68 @@
 #!/bin/bash
+#{
+#    echo -ne "POST /test.py HTTP/1.1\r\n"
+#    echo -ne "Host: localhost\r\n"
+#    echo -ne "Transfer-Encoding: chunked\r\n"
+#    echo -ne "\r\n"
+#    sleep 0.5
+#    echo -ne "7\r\nHello, \r\n"
+#    sleep 0.5
+#    echo -ne "6\r\nWorld!\r\n"
+#    sleep 0.5
+#    echo -ne "0\r\n\r\n"
+#} | nc localhost 8080
+
 {
-    echo -ne "GET / HTTP/1.1\r\n"
+    echo -ne "GET /upload HTTP/1.1\r\n"
     sleep 2
     echo -ne "Host: localhost\r\n"
+    echo -ne "Connection:keep-alive"
     sleep 2
     echo -ne "\r\n"
 } | nc localhost 8080
 
 
-{
-    echo -ne "POST / HTTP/1.1\r\n"
-    sleep 2
-    echo -ne "Host: localhost\r\n"
-    sleep 2
-    echo -ne "Content-Length:6\r\n"
-    echo -ne "\r\n"
-    echo -ne "Hello\n"
-} | nc localhost 8080
+#{
+#    echo -ne "POST /test.py?key=value&key2=value2 HTTP/1.1\r\n"
+#    sleep 2
+#    echo -ne "Host: localhost\r\n"
+#    sleep 2
+#    echo -ne "Content-Length:6\r\n"
+#    echo -ne "\r\n"
+#    echo -ne "Hello\n"
+#} | nc localhost 8080
 
-{
-    echo -ne "DELETE /pictures/1.png HTTP/1.1\r\n"
-    sleep 2
-    echo -ne "Host: localhost\r\n"
-    sleep 2
-    echo -ne "\r\n"
-} | nc localhost 8080
+#{
+#    echo -ne "DELETE /pictures/1.png HTTP/1.1\r\n"
+#    sleep 2
+#    echo -ne "Host: localhost\r\n"
+#    sleep 2
+#    echo -ne "\r\n"
+#} | nc localhost 8080
+#
+#{
+#    echo -ne "GET / HTTP/1.1\r\n"
+#    sleep 2
+#    echo -ne "Host: localhost\r\n"
+#    echo -ne "Connection: Keep-Alive\r\n"
+#    sleep 2
+#    echo -ne "\r\n"
+#
+#    echo -ne "POST /test.py HTTP/1.1\r\n"
+#    sleep 2
+#    echo -ne "Host: localhost\r\n"
+#    echo -ne "Connection: Keep-Alive\r\n"
+#    sleep 2
+#    echo -ne "Content-Length:6\r\n"
+#    echo -ne "\r\n"
+#    echo -ne "Hello\n"
+#
+#    echo -ne "GET / HTTP/1.1\r\n"
+#    sleep 2
+#    echo -ne "Host: localhost\r\n"
+#    echo -ne "Connection: close\r\n"
+#    sleep 2
+#    echo -ne "\r\n"
+#} | nc localhost 8080
+#
 
-{
-    echo -ne "GET / HTTP/1.1\r\n"
-    sleep 2
-    echo -ne "Host: localhost\r\n"
-    echo -ne "Connection: Keep-Alive\r\n"
-    sleep 2
-    echo -ne "\r\n"
-
-    echo -ne "POST / HTTP/1.1\r\n"
-    sleep 2
-    echo -ne "Host: localhost\r\n"
-    echo -ne "Connection: Keep-Alive\r\n"
-    sleep 2
-    echo -ne "Content-Length:6\r\n"
-    echo -ne "\r\n"
-    echo -ne "Hello\n"
-
-    echo -ne "DELETE /pictures/1.png HTTP/1.1\r\n"
-    sleep 2
-    echo -ne "Host: localhost\r\n"
-    echo -ne "Connection: close\r\n"
-    sleep 2
-    echo -ne "\r\n"
-} | nc localhost 8080
-
-{
-    echo -ne "POST /upload HTTP/1.1\r\n"
-    echo -ne "Host: localhost\r\n"
-    echo -ne "Transfer-Encoding: chunked\r\n"
-    echo -ne "\r\n"
-    sleep 0.5
-    echo -ne "7\r\nHello, \r\n"
-    sleep 0.5
-    echo -ne "6\r\nWorld!\r\n"
-    sleep 0.5
-    echo -ne "0\r\n\r\n"
-} | nc localhost 8080
