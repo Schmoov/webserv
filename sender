@@ -13,58 +13,7 @@
 #} | nc localhost 8080
 
 {
-    echo -ne "GET /dir1/file HTTP/1.1\r\n"
-    echo -ne "Host: localhost\r\n"
-    echo -ne "\r\n"
-} | nc localhost 8080
-{
-    echo -ne "GET /dir2/file HTTP/1.1\r\n"
-    echo -ne "Host: localhost\r\n"
-    echo -ne "\r\n"
+    echo -ne "GET / HTTP/1.1\r\nHost: localhost\r\n\r\nGET / HTTP/1.1\r\nHost: localhost\r\n\r\n"
 } | nc localhost 8080
 
-
-#{
-    #echo -ne "POST /test.py?key=value&key2=value2 HTTP/1.1\r\n"
-    #sleep 2
-    #echo -ne "Host: localhost\r\n"
-    #sleep 2
-    #echo -ne "Content-Length:6\r\n"
-    #echo -ne "\r\n"
-    #echo -ne "Hello\n"
-#} | nc localhost 8080
-
-#{
-#    echo -ne "DELETE /pictures/1.png HTTP/1.1\r\n"
-#    sleep 2
-#    echo -ne "Host: localhost\r\n"
-#    sleep 2
-#    echo -ne "\r\n"
-#} | nc localhost 8080
-#
-#{
-#    echo -ne "GET / HTTP/1.1\r\n"
-#    sleep 2
-#    echo -ne "Host: localhost\r\n"
-#    echo -ne "Connection: Keep-Alive\r\n"
-#    sleep 2
-#    echo -ne "\r\n"
-#
-#    echo -ne "POST /test.py HTTP/1.1\r\n"
-#    sleep 2
-#    echo -ne "Host: localhost\r\n"
-#    echo -ne "Connection: Keep-Alive\r\n"
-#    sleep 2
-#    echo -ne "Content-Length:6\r\n"
-#    echo -ne "\r\n"
-#    echo -ne "Hello\n"
-#
-#    echo -ne "GET / HTTP/1.1\r\n"
-#    sleep 2
-#    echo -ne "Host: localhost\r\n"
-#    echo -ne "Connection: close\r\n"
-#    sleep 2
-#    echo -ne "\r\n"
-#} | nc localhost 8080
-#
 

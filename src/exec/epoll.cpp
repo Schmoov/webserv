@@ -34,7 +34,7 @@ void handle_sigint(int sig)
 static std::string createResponse(StatusCode code, std::string content, std::string contentType)
 {
     std::ostringstream response;
-    response    << "HTTP/1.0 " << code << " " << resolveStatusText(code) << "\r\n"
+    response    << "HTTP/1.1 " << code << " " << resolveStatusText(code) << "\r\n"
                 << "Content-Type: " << contentType << "\r\n"
                 << "Content-Length: " << content.size() << "\r\n"
                 << "Connection: Close\r\n" //keep alive
@@ -210,11 +210,6 @@ void no_cgi_response(int fd, std::string content)
 void execute(int fd)
 {
     print_conversation_infos(fd); //<<-- debug
-    if(!conversations[fd].req.header.count("connection"))
-    {
-        conversations[fd].resp.shouldClose = true;
-        printf("Should Close:%d\n", conversations[fd].resp.shouldClose);
-    }
     std::string response_content = execute(conversations[fd]);
     printf("\t\t[EXECUTE]  returned:%s fd=%d\n", response_content.c_str(), fd);
     // If empty, then CGI happened so we just wait for CGI to finish

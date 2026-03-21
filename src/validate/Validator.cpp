@@ -85,6 +85,7 @@ void Validator::validateHeader(Conversation& conv) {
 	if (head.count("content-encoding"))
 		return skipBody(conv, NOT_IMPLEMENTED);
 	if (head.count("connection")) {
+		toLower(head["connection"]);
 		if (head["connection"] == "close") {
 			conv.resp.shouldClose = true;
 		} else if (head["connection"] != "keep-alive")
@@ -94,6 +95,7 @@ void Validator::validateHeader(Conversation& conv) {
 	//	conv.req.cookie = head["cookie"];
 	//}
 	if (head.count("expect")) {
+		toLower(head["expect"]);
 		if (head["expect"] == "100-continue") {
 			if (!conv.resp.status) {
 				conv.resp.status = CONTINUE;

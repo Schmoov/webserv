@@ -15,7 +15,7 @@ void exit_server(const char *error_message)
 static std::string createResponse(StatusCode code, std::string content, std::string contentType)
 {
     std::ostringstream response;
-    response    << "HTTP/1.0 " << code << " " << resolveStatusText(code) << "\r\n"
+    response    << "HTTP/1.1 " << code << " " << resolveStatusText(code) << "\r\n"
                 << "Content-Type: " << contentType << "\r\n"
                 << "Content-Length: " << content.size() << "\r\n"
                 << "Connection: Close\r\n" //keep alive
@@ -51,7 +51,7 @@ std::string createCGIResponse(Conversation &conversation, std::string &raw_outpu
         cgi_headers.erase(sep_index, end - sep_index + 2);
     }
 
-    std::string response = "HTTP/1.0 " + status_line + "\r\n";
+    std::string response = "HTTP/1.1 " + status_line + "\r\n";
         response += "Server: " + conversation.conf->server_name + "\r\n";
         if(conversation.resp.shouldClose)
             response += "Connection: close\r\n";
@@ -159,8 +159,8 @@ std::string fork_process(Conversation &conversation)
             script_name = "SCRIPT_NAME=" + conversation.req.pathOnDisk.substr(conversation.req.pathOnDisk.rfind('/') + 1);
         std::string server_name = "SERVER_NAME=" + conversation.conf->host;
         std::string server_port = "SERVER_PORT=" + std::to_string(conversation.conf->port);
-        std::string server_protocol = "SERVER_PROTOCOL=HTTP/1.0";
-        std::string server_software = "SERVER_SOFTWARE=webserv/1.0";
+        std::string server_protocol = "SERVER_PROTOCOL=HTTP/1.1";
+        std::string server_software = "SERVER_SOFTWARE=webserv/1.1";
         
         char *env[] = {
             const_cast<char *>(content_length.c_str()),

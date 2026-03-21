@@ -3,7 +3,7 @@
 static std::string createResponse(StatusCode code, std::string content, std::string contentType)
 {
     std::ostringstream response;
-    response    << "HTTP/1.0 " << code << " " << resolveStatusText(code) << "\r\n"
+    response    << "HTTP/1.1 " << code << " " << resolveStatusText(code) << "\r\n"
                 << "Content-Type: " << contentType << "\r\n"
                 << "Content-Length: " << content.size() << "\r\n"
                 << "Connection: Close\r\n" //keep alive
