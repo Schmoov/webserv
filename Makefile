@@ -41,7 +41,7 @@ testVal:
 	rm a.out
 
 testConf:
-	c++ -Wall -Wextra -std=c++98 src/configParse/*.cpp src/*.cpp test/configParse/main.cpp && ./a.out
+	c++ -Wall -Wextra -std=c++98 src/configParse/*.cpp src/parse/*.cpp src/*.cpp test/configParse/main.cpp && ./a.out
 	rm -f test/configParse/test*.conf
 	rm a.out
 

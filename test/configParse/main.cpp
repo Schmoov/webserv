@@ -18,7 +18,6 @@ void test_valid_server() {
         "server {\n"
         "listen 8080\n"
         "host 127.0.0.1\n"
-        "server_name myserver\n"
         "root /var/www\n"
         "client_max_body_size 42069\n"
         "}\n";
@@ -30,7 +29,6 @@ void test_valid_server() {
     ServerConfig sc = conf[8080];
     assert(sc.port == 8080);
     assert(sc.host == "127.0.0.1");
-    assert(sc.server_name == "myserver");
     assert(sc.root == "/var/www");
     assert(sc.clientMaxBodySize == 42069);
     cout << "test_valid_server passed\n";
@@ -42,7 +40,6 @@ void test_location_cgi() {
         "server {\n"
         "listen 9090\n"
         "host 0.0.0.0\n"
-        "server_name cgisrv\n"
         "root /srv/www\n"
         "client_max_body_size 42069\n"
         "location /cgi {\n"

@@ -21,6 +21,7 @@ Conversation validConv() {
 	c.conf = new ServerConfig;
 	c.conf->port = 8080;
 	c.conf->host = "www.test.io";
+	c.conf->root = "/www";
 
 	Location a = validLoc("/");
 	a.hasRoot = false;
@@ -61,7 +62,7 @@ void test_happy_path() {
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dir1"]);
 	assert(c.req.uri == "/dir1/dir2/file1");
-	assert(c.req.pathOnDisk == "/dir1/dir2/file1");
+	assert(c.req.pathOnDisk == "/www/dir1/dir2/file1");
 	assert(c.req.hasQuery == true);
 	assert(c.req.query == "query");
 	assert(c.req.bodyLeft == 5);
@@ -74,7 +75,7 @@ void test_happy_path() {
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dir1"]);
 	assert(c.req.uri == "http://www.test.io:8080/dir1/dir2/file1");
-	assert(c.req.pathOnDisk == "/dir1/dir2/file1");
+	assert(c.req.pathOnDisk == "/www/dir1/dir2/file1");
 	assert(c.req.hasQuery == true);
 	assert(c.req.query == "query");
 	assert(c.req.bodyLeft == 5);
@@ -89,7 +90,7 @@ void test_happy_path() {
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/"]);
 	assert(c.req.uri == "/dir1a/banana.jpg");
-	assert(c.req.pathOnDisk == "/dir1a/banana.jpg");
+	assert(c.req.pathOnDisk == "/www/dir1a/banana.jpg");
 	assert(c.req.hasQuery == false);
 	assert(c.resp.status == NOT_A_STATUS_CODE);
 	assert(c.resp.shouldClose == false);
@@ -101,7 +102,7 @@ void test_happy_path() {
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dirRoot"]);
 	assert(c.req.uri == "/dirRoot/file");
-	assert(c.req.pathOnDisk == "/another_dir/file");
+	assert(c.req.pathOnDisk == "/another_dir/dirRoot/file");
 	assert(c.req.bodyLeft == 5);
 	assert(c.resp.status == NOT_A_STATUS_CODE);
 	assert(c.resp.shouldClose == false);
@@ -112,8 +113,7 @@ void test_happy_path() {
 	v.validate(c);
 	assert(c.state == PARSE_BODY);
 	assert(c.loc == &c.conf->pathToLoc["/dir3"]);
-	assert(c.req.uri == "/dir3/xXx_roXor_xXx");
-	assert(c.req.pathOnDisk == "https://github.com/xXx_roXor_xXx"); // ???
+	assert(c.req.uri == "https://github.com");
 	assert(c.req.bodyLeft == 5);
 	assert(c.resp.status == MOVED_PERMANENTLY);
 	assert(c.resp.shouldClose == false);

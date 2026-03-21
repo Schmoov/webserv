@@ -64,7 +64,7 @@ std::string handleGet(Conversation &conversation)
 {
     if(!conversation.req.pathOnDisk.empty() && conversation.req.pathOnDisk[0] == '/')
         conversation.req.pathOnDisk.erase(0, 1);
-    conversation.req.pathOnDisk = conversation.conf->root + conversation.req.pathOnDisk;
+    //conversation.req.pathOnDisk = conversation.conf->root + conversation.req.pathOnDisk;
     printf("/////////////////////PATH%s\n", conversation.req.pathOnDisk.c_str());
     Request request = conversation.req;
     std::string pathOnDisk = request.pathOnDisk;

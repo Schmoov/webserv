@@ -151,14 +151,15 @@ void Validator::assembleUri(Conversation& conv, vector<string>& seg, size_t matc
 	conv.req.pathOnDisk = "";
 	size_t i = 0;
 	if (conv.loc->hasRedir) {
-		conv.req.pathOnDisk += conv.loc->redirURL;
+		conv.req.uri = conv.loc->redirURL;
 		conv.resp.status = conv.loc->redirCode;
-		i = match;
+		return ;
 	}
-	if (conv.loc->hasRoot) {
+	else if (conv.loc->hasRoot) {
 		conv.req.pathOnDisk += conv.loc->root;
-		i = match;
-	}
+	} else
+		conv.req.pathOnDisk += conv.conf->root;
+
 	while (i < seg.size()) {
 		conv.req.pathOnDisk += '/' + seg[i];
 		i++;

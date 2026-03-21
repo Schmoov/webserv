@@ -22,12 +22,6 @@ std::map<int, Conversation> conversations;
 std::map<int, Conversation *> conversations_cgi_in;
 std::map<int, Conversation *> conversations_cgi_out;
 
-Conversation::Conversation() {
-		parser = new Parser;
-		reader = new Reader;
-		validator = new Validator;
-	}
-
 std::map<int, ServerConfig> sConf;
 
 void handle_sigint(int sig)

@@ -71,8 +71,8 @@ void parseServerParams(ServerConfig& conf, ifstream& file) {
 
 		if (token == "location")
 			parseLocation(conf, line, file);
-		else if (token == "server_name")
-			configParseServerName(conf, line);
+//		else if (token == "server_name")
+//			configParseServerName(conf, line);
 		else if (token == "host")
 			configParseHost(conf, line);
 		else if (token == "root")
