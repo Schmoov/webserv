@@ -31,24 +31,11 @@ void handle_sigint(int sig)
     keep_running = 0;
 }
 
-static std::string createResponse(StatusCode code, std::string content, std::string contentType)
+std::string adress_to_string(uint32_t adress)
 {
-    std::ostringstream response;
-    response    << "HTTP/1.1 " << code << " " << resolveStatusText(code) << "\r\n"
-                << "Content-Type: " << contentType << "\r\n"
-                << "Content-Length: " << content.size() << "\r\n"
-                << "Connection: Close\r\n" //keep alive
-                << "\r\n"
-                << content;
-    return response.str();
-}
-
-static std::string createErrorResponse(StatusCode code)
-{
-    std::ostringstream response;
-    std::string error_message = resolveStatusText(code);
-    response << "<html><body><h1>" << code << " " << error_message << "</h1></body></html>";
-    return createResponse(code, response.str(), "text/html");
+    std::stringstream ip;
+    ip << ((adress >> 24) & 0xFF) << "." << ((adress >> 16) & 0xFF) << "." << ((adress >> 8) & 0xFF) << "." << ((adress) & 0xFF);
+    return ip.str();
 }
 
 static bool addNewConnection(int server_fd)
@@ -61,6 +48,8 @@ static bool addNewConnection(int server_fd)
     if (client_fd == -1)
         false;
 
+    uint32_t client_adress = ntohl(client_addr.sin_addr.s_addr);
+
     fcntl(client_fd, F_SETFL, fcntl(client_fd, F_GETFL) | O_NONBLOCK);
 
     event.events  = EPOLLIN;
@@ -72,8 +61,9 @@ static bool addNewConnection(int server_fd)
     conversations.insert({client_fd, conversation});
     conversations[client_fd].conf = &sConf[PORT];
     conversations[client_fd].state = READ_CLIENT;
+    conversations[client_fd].client_adress = adress_to_string(client_adress);
 
-    printf("\t[NEW]  Client connected! fd=%d\n", client_fd);
+    printf("\t[NEW]  Client connected! Client adress is:%s on fd=%d\n", conversations[client_fd].client_adress.c_str(), client_fd);
     return true;
 }
 
@@ -101,7 +91,7 @@ static void endReadCgiOutput(Conversation &conversation, Cgi &cgi_infos, int cgi
     waitpid(cgi_infos.pid, &status, 0);
     Response &response = conversation.resp;
     if((WIFEXITED(status) && WEXITSTATUS(status) != 0))
-        response.content = createErrorResponse(INTERNAL_SERVER_ERROR);
+        response.content = createErrorResponse(INTERNAL_SERVER_ERROR, conversation.resp.shouldClose);
     else
         response.content = createCGIResponse(conversation, cgi_infos.raw_output);
     response.content_size = response.content.size();

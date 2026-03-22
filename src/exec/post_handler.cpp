@@ -113,27 +113,8 @@ std::string fork_process(Conversation &conversation, std::string binary_path)
         else
             query_string = "QUERY_STRING=";
         
-        
-        ///// NOT ALLOWED
-        struct sockaddr_storage address;
-        socklen_t address_length = sizeof(address);
-        getpeername(conversation.fd, (struct sockaddr *)&address, &address_length);
-        
-        
-        char ip_str[INET6_ADDRSTRLEN];
-        
-        if (address.ss_family == AF_INET) {
-            struct sockaddr_in *s = (struct sockaddr_in *)&address;
-            inet_ntop(AF_INET, &s->sin_addr, ip_str, sizeof(ip_str));
-        } else if (address.ss_family == AF_INET6) {
-            struct sockaddr_in6 *s = (struct sockaddr_in6 *)&address;
-            inet_ntop(AF_INET6, &s->sin6_addr, ip_str, sizeof(ip_str));
-        }
-        
-        ///// NOT ALLOWED
-        
-        std::string remote_address = "REMOTE_ADDR=" + std::string(ip_str);
-        std::string remote_host = "REMOTE_HOST=" + std::string(ip_str);
+        std::string remote_address = "REMOTE_ADDR=" + std::string(conversation.client_adress);
+        std::string remote_host = "REMOTE_HOST=" + std::string(conversation.client_adress);
         std::string method = "REQUEST_METHOD=" + conversation.req.method;
         std::string script_name;
         if(conversation.req.pathOnDisk != "")

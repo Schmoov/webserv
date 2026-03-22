@@ -60,6 +60,7 @@ public:
 	Response resp;
 	ConvState state;
 	std::string buf;
+	std::string client_adress;
 
 	Parser *parser;
 	Reader *reader;
