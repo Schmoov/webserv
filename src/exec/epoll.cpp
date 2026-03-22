@@ -71,6 +71,7 @@ static bool addNewConnection(int server_fd)
     conversation.fd = client_fd;
     conversations.insert({client_fd, conversation});
     conversations[client_fd].conf = &sConf[PORT];
+    conversations[client_fd].state = READ_CLIENT;
 
     printf("\t[NEW]  Client connected! fd=%d\n", client_fd);
     return true;
@@ -175,7 +176,7 @@ bool send_and_close_if_needed(int fd)
     event.events  = EPOLLIN;
     event.data.fd = fd;
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &event);
-    conversations[fd].state = READ_CLIENT;
+    conversations[fd].state = PARSE;
     return false;
 }
 
@@ -225,11 +226,15 @@ void execute(int fd)
 bool read_client(int fd)
 {
     printf("\t\t[READ]  CLIENT READ fd=%d\n", fd);
-    conversations[fd].state = READ_CLIENT;
     manage(conversations[fd]);
-    /*printf("%s\n", conversations[fd].req.method.c_str());
-    for(const auto &pair : conversations[fd].req.header)
-        printf("Headers:%s %s\n", pair.first.c_str(), pair.second.c_str());*/
+    if(conversations[fd].state == FINISH)
+    {
+        printf("[CLOSE] fd:%d\n", fd);
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+        close(fd);
+        conversations.erase(fd);
+        return false;
+    }
     if (conversations[fd].state == EXEC) 
     {
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);

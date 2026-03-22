@@ -37,4 +37,6 @@ std::string readFile(const std::string &path);
 std::string resolveStatusText(StatusCode code);
 bool endsWith(const std::string &str, const std::string &suffix);
 
-void stateManager(Conversation& conv);
+std::string createErrorResponse(StatusCode code, bool shouldClose);
+std::string createResponse(StatusCode code, std::string content, std::string contentType, bool shouldClose);
+std::string connection_status_to_str(bool shouldClose);

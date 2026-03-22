@@ -3,12 +3,14 @@
 std::string execute(Conversation &conversation)
 {
     Request request = conversation.req;
+    StatusCode status = conversation.resp.status;
+    bool shouldClose = conversation.resp.shouldClose;
 
-    if(conversation.resp.status != NOT_A_STATUS_CODE)
+    /*if(status != NOT_A_STATUS_CODE)
     {
-        //error page;
-        //status code to statuic page sinon créer la page
-    }
+        std::cout << "HERE" << shouldClose << std::endl;
+        return createErrorResponse(status, shouldClose);
+    }*/
 
 
     if(request.method == "GET")

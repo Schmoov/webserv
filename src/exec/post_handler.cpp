@@ -12,33 +12,14 @@ void exit_server(const char *error_message)
     std::exit(1);
 }
 
-static std::string createResponse(StatusCode code, std::string content, std::string contentType)
-{
-    std::ostringstream response;
-    response    << "HTTP/1.1 " << code << " " << resolveStatusText(code) << "\r\n"
-                << "Content-Type: " << contentType << "\r\n"
-                << "Content-Length: " << content.size() << "\r\n"
-                << "Connection: Close\r\n" //keep alive
-                << "\r\n"
-                << content;
-    return response.str();
-}
-
-static std::string createErrorResponse(StatusCode code)
-{
-    std::ostringstream response;
-    std::string error_message = resolveStatusText(code);
-    response << "<html><body><h1>" << code << " " << error_message << "</h1></body></html>";
-    return createResponse(code, response.str(), "text/html");
-}
-
 std::string createCGIResponse(Conversation &conversation, std::string &raw_output)
 {
+    bool shouldClose = conversation.resp.shouldClose;
     std::string status_line = "200 OK";
     std::string separator = "\r\n\r\n";
     size_t sep_index = raw_output.find(separator);
     if(sep_index == std::string::npos)
-        return createErrorResponse(INTERNAL_SERVER_ERROR);
+        return createErrorResponse(INTERNAL_SERVER_ERROR, shouldClose);
     std::string cgi_headers = raw_output.substr(0, sep_index);
     std::string body = raw_output.substr(sep_index + separator.size());
     std::string status_code_string = "Status: ";
@@ -78,7 +59,7 @@ int write_to_pipe(Conversation &conversation, int fd)
     return written == total;
 }
 
-std::string fork_process(Conversation &conversation)
+std::string fork_process(Conversation &conversation, std::string binary_path)
 {
     std::cout << "POST\n";
     int pipe_in[2];
@@ -177,7 +158,7 @@ std::string fork_process(Conversation &conversation)
             const_cast<char *>(server_software.c_str()),
             NULL
         };
-        execve(path.c_str(), args, env);
+        execve(binary_path.c_str(), args, env);
         _exit(1); // NOT ALLOWED IN SUBJECT BUT NEEDED ANYWAY. DO WE USE IT OR NOT ?
         // CAN BE REPLACED BY (WHICH IS UGLY AS FUCK)
         //std::abort();
@@ -224,13 +205,13 @@ std::string fork_process(Conversation &conversation)
 
 std::string handlePost(Conversation &conversation)
 {
-    if(!conversation.req.pathOnDisk.empty() && conversation.req.pathOnDisk[0] == '/')
-        conversation.req.pathOnDisk.erase(0, 1);
-    //conversation.req.pathOnDisk = conversation.conf->root + conversation.req.pathOnDisk;
+    bool shouldClose = conversation.resp.shouldClose;
     printf("/////////////////////PATH%s\n", conversation.req.pathOnDisk.c_str());
     if(isFile(conversation.req.pathOnDisk) != OK)
-        return (createErrorResponse(NOT_FOUND));
-    if(!endsWith(conversation.req.pathOnDisk, ".py")) // REPLACE BY CHECK ON loc.cgiHandler
-        return (createErrorResponse(METHOD_NOT_ALLOWED));
-    return fork_process(conversation);
+        return (createErrorResponse(NOT_FOUND, shouldClose));
+    if(endsWith(conversation.req.pathOnDisk, ".py"))
+        return fork_process(conversation, conversation.loc->cgiHandler[".py"]);
+    else if(endsWith(conversation.req.pathOnDisk, ".sh"))
+        return fork_process(conversation, conversation.loc->cgiHandler[".sh"]);
+    return (createErrorResponse(METHOD_NOT_ALLOWED, shouldClose));
 }

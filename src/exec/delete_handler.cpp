@@ -12,7 +12,7 @@ static std::string createResponse(StatusCode code, std::string content, std::str
     return response.str();
 }
 
-static std::string createResponseBody(StatusCode code)
+static std::string createResponseBody(StatusCode code, bool statusCode)
 {
     std::ostringstream response;
     std::string message = resolveStatusText(code);
@@ -27,29 +27,29 @@ std::string handleDelete(Conversation &conversation)
     StatusCode code;
 
     code = isDirectory(uri);
-    
+    bool shouldClose = conversation.resp.shouldClose;
     
     if(code == FORBIDDEN || code == INTERNAL_SERVER_ERROR)
-        return createResponseBody(code);
+        return createResponseBody(code, shouldClose);
     if(code == OK)
     {
         if(rmdir(request.uri.c_str()) != 0)
         {
             if(errno == EACCES)
-                return createResponseBody(FORBIDDEN);
-            return createResponseBody(INTERNAL_SERVER_ERROR);
+                return createResponseBody(FORBIDDEN, shouldClose);
+            return createResponseBody(INTERNAL_SERVER_ERROR, shouldClose);
         }
-        return createResponseBody(OK);
+        return createResponseBody(OK, shouldClose);
     }
 
     code = isFile(uri);
     if(code != OK)
-        return createResponseBody(code);
+        return createResponseBody(code, shouldClose);
     if(std::remove(request.uri.c_str()) != 0)
     {
         if(errno == EACCES)
-            return createResponseBody(FORBIDDEN);
-        return createResponseBody(INTERNAL_SERVER_ERROR);
+            return createResponseBody(FORBIDDEN, shouldClose);
+        return createResponseBody(INTERNAL_SERVER_ERROR, shouldClose);
     }
-    return createResponseBody(OK);
+    return createResponseBody(OK, shouldClose);
 }

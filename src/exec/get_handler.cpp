@@ -1,30 +1,10 @@
 #include "../../inc/execution/execution.hpp"
 
-static std::string createResponse(StatusCode code, std::string content, std::string contentType)
-{
-    std::ostringstream response;
-    response    << "HTTP/1.1 " << code << " " << resolveStatusText(code) << "\r\n"
-                << "Content-Type: " << contentType << "\r\n"
-                << "Content-Length: " << content.size() << "\r\n"
-                << "Connection: Close\r\n" //keep alive
-                << "\r\n"
-                << content;
-    return response.str();
-}
-
-static std::string createErrorResponse(StatusCode code)
-{
-    std::ostringstream response;
-    std::string error_message = resolveStatusText(code);
-    response << "<html><body><h1>" << code << " " << error_message << "</h1></body></html>";
-    return createResponse(code, response.str(), "text/html");
-}
-
-static std::string directoryListing(const std::string& path)
+static std::string directoryListing(const std::string& path, bool shouldClose)
 {
     DIR *directory = opendir(path.c_str());
     if(!directory)
-        return createErrorResponse(INTERNAL_SERVER_ERROR);
+        return createErrorResponse(INTERNAL_SERVER_ERROR, shouldClose);
     std::ostringstream htmlListing;
     htmlListing << "<html><body><h1>" << path << "</h1><ul>";
     struct dirent *entry;
@@ -41,7 +21,7 @@ static std::string directoryListing(const std::string& path)
     }
     closedir(directory);
     htmlListing << "</ul></body></html>";
-    return createResponse(OK, htmlListing.str(), "text/html");
+    return createResponse(OK, htmlListing.str(), "text/html", shouldClose);
 }
 
 static std::string getMime(std::string path)
@@ -62,17 +42,14 @@ static std::string getMime(std::string path)
 
 std::string handleGet(Conversation &conversation)
 {
-    if(!conversation.req.pathOnDisk.empty() && conversation.req.pathOnDisk[0] == '/')
-        conversation.req.pathOnDisk.erase(0, 1);
-    //conversation.req.pathOnDisk = conversation.conf->root + conversation.req.pathOnDisk;
-    printf("/////////////////////PATH%s\n", conversation.req.pathOnDisk.c_str());
     Request request = conversation.req;
     std::string pathOnDisk = request.pathOnDisk;
     StatusCode code;
+    bool shouldClose = conversation.resp.shouldClose;
 
     code = isDirectory(pathOnDisk);
     if(code == FORBIDDEN || code == INTERNAL_SERVER_ERROR)
-        return createErrorResponse(code);
+        return createErrorResponse(code, shouldClose);
     if(code == OK)
     {
         std::string path_with_index = pathOnDisk;
@@ -83,23 +60,23 @@ std::string handleGet(Conversation &conversation)
         if(isFile(path_with_index) == OK)
         {
             std::string content = readFile(path_with_index);
-            return createResponse(OK, content, getMime(path_with_index));
+            return createResponse(OK, content, getMime(path_with_index), shouldClose);
         }
 
         if(conversation.loc->autoIndex)
-            return directoryListing(pathOnDisk);
+            return directoryListing(pathOnDisk, shouldClose);
 
-        return createErrorResponse(FORBIDDEN);
+        return createErrorResponse(FORBIDDEN, shouldClose);
     }
 
     code = isFile(pathOnDisk);
     if(code != OK)
-        return createErrorResponse(code);
+        return createErrorResponse(code, shouldClose);
     if(endsWith(pathOnDisk, ".py")) // REPLACE BY CHECK ON loc.cgiHandler
-        return (createErrorResponse(METHOD_NOT_ALLOWED));
+        return (createErrorResponse(METHOD_NOT_ALLOWED, shouldClose));
 
     std::string content = readFile(pathOnDisk);
     std::string contentType = getMime(pathOnDisk);
 
-    return createResponse(OK, content, getMime(pathOnDisk));
+    return createResponse(OK, content, getMime(pathOnDisk), shouldClose);
 }
