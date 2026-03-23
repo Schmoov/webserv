@@ -6,7 +6,6 @@
 #include "../../inc/configParse/configParse.hpp"
 #include "../../inc/validate/Validator.hpp"
 
-#define PORT        8080
 #define MAX_EVENTS  10
 
 #include <signal.h>
@@ -22,7 +21,10 @@ std::map<int, Conversation> conversations;
 std::map<int, Conversation *> conversations_cgi_in;
 std::map<int, Conversation *> conversations_cgi_out;
 
-std::map<int, ServerConfig> sConf;
+std::map<int, ServerConfig> server_configs;
+
+
+std::map<int, ServerConfig> configurations;
 
 void handle_sigint(int sig)
 {
@@ -38,7 +40,7 @@ std::string adress_to_string(uint32_t adress)
     return ip.str();
 }
 
-static bool addNewConnection(int server_fd)
+static bool addNewConnection(int server_fd, int port)
 {
     struct sockaddr_in client_addr;
     socklen_t len = sizeof(client_addr);
@@ -59,7 +61,8 @@ static bool addNewConnection(int server_fd)
     Conversation conversation;
     conversation.fd = client_fd;
     conversations.insert({client_fd, conversation});
-    conversations[client_fd].conf = &sConf[PORT];
+    conversations[client_fd].conf = &configurations[port];
+
     conversations[client_fd].state = READ_CLIENT;
     conversations[client_fd].client_adress = adress_to_string(client_adress);
 
@@ -261,7 +264,7 @@ bool write_cgi(int fd)
     return false;
 }
 
-int create_server_socket()
+int create_server_socket(int port)
 {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
@@ -270,19 +273,18 @@ int create_server_socket()
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port   = htons(PORT);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port   = htons(port);
+    addr.sin_addr.s_addr = /*INADDR_ANY*/inet_addr("127.0.0.1");
 
     bind(server_fd, (struct sockaddr *)&addr, sizeof(addr));
     listen(server_fd, 5);
     fcntl(server_fd, F_SETFL, fcntl(server_fd, F_GETFL) | O_NONBLOCK);
-    printf("[SETUP] Server listening on port %d\n", PORT);
+    printf("[SETUP] Server listening on port %d\n", port);
     return server_fd;
 }
 
 void add_server_port_to_epoll(int server_fd)
 {
-    epoll_fd = epoll_create1(0);
     printf("[SETUP] epoll_fd = %d\n\n", epoll_fd);
 
     event.events  = EPOLLIN;
@@ -291,7 +293,21 @@ void add_server_port_to_epoll(int server_fd)
     printf("[SETUP] Added server_fd=%d to epoll (watching EPOLLIN)\n\n", server_fd);
 }
 
-void main_loop(int server_fd)
+bool is_server_connection(int event_fd)
+{
+    for(auto &pair : server_configs)
+    {
+        int server_fd = pair.first;
+        if (event_fd == server_fd)
+        {
+            addNewConnection(server_fd, pair.second.port);
+            return true;
+        }
+    }
+    return false;
+}
+
+void main_loop()
 {
     printf("=== Entering event loop\n\n");
     struct epoll_event events[MAX_EVENTS];
@@ -314,30 +330,25 @@ void main_loop(int server_fd)
         {
             int fd = events[i].data.fd;
             printf("[EVENT] on fd %d\n", fd);
-            if (fd == server_fd)
+            if(is_server_connection(fd))
+                continue;
+            
+            if (events[i].events & EPOLLIN)
             {
-                if(!addNewConnection(server_fd))
+                printf("\t[TRIGGER]  EPOLLIN fd=%d\n", fd);
+                if(read_cgi(fd))
+                    continue;
+                if(read_client(fd))
                     continue;
             }
-            else 
+            else if(events[i].events & EPOLLOUT)
             {
-                if (events[i].events & EPOLLIN)
-                {
-                    printf("\t[TRIGGER]  EPOLLIN fd=%d\n", fd);
-                    if(read_cgi(fd))
-                        continue;
-                    if(read_client(fd))
-                        continue;
-                }
-                else if(events[i].events & EPOLLOUT)
-                {
-                    printf("\t[TRIGGER]  EPOLLOUT fd=%d\n", fd);
-                    if(write_cgi(fd))
-                        continue;
+                printf("\t[TRIGGER]  EPOLLOUT fd=%d\n", fd);
+                if(write_cgi(fd))
+                    continue;
 
-                    if(!send_and_close_if_needed(fd))
-                        conversations[fd].state = READ_CLIENT;
-                }
+                if(!send_and_close_if_needed(fd))
+                    conversations[fd].state = READ_CLIENT;
             }
             if(events[i].events & (EPOLLHUP | EPOLLERR))
             {
@@ -354,12 +365,20 @@ int main(int agrc, char **argv)
 {
     signal(SIGINT, handle_sigint);
     
-    int server_fd = create_server_socket();
-    add_server_port_to_epoll(server_fd);
-    sConf = parseConfig(argv[1]);
-    main_loop(server_fd);
+    configurations = parseConfig(argv[1]);
+    epoll_fd = epoll_create1(0);
+    for(auto &pair : configurations)
+    {
+        int server_fd = create_server_socket(pair.second.port);
+        server_configs[server_fd] = pair.second;
+        add_server_port_to_epoll(server_fd);
+    }
+    
+    main_loop();
 
+    for(auto &pair : server_configs)
+        close(pair.first);
+    
     close(epoll_fd);
-    close(server_fd);
     return 0;
 }
