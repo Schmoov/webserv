@@ -48,7 +48,7 @@ static bool addNewConnection(int server_fd, int port)
         (struct sockaddr *)&client_addr, &len);
 
     if (client_fd == -1)
-        false;
+        return false;
 
     uint32_t client_adress = ntohl(client_addr.sin_addr.s_addr);
 
