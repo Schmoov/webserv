@@ -5,6 +5,7 @@
 #include "enum.hpp"
 #include "utils.hpp"
 #include "config.hpp"
+#include "sys/types.h"
 
 class Request {
 public:
@@ -26,7 +27,7 @@ struct Cgi
 	pid_t pid;
 	int pipe_in;
 	int pipe_out;
-	int written;
+	size_t written;
 	std::string *to_write;
 	std::string raw_output;
 };

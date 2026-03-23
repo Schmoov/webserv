@@ -148,6 +148,7 @@ size_t Validator::matchLoc(Conversation& conv, vector<string>& seg) {
 }
 
 void Validator::assembleUri(Conversation& conv, vector<string>& seg, size_t match) {
+	(void)match;
 	conv.req.pathOnDisk = "";
 	size_t i = 0;
 	if (conv.loc->hasRedir) {

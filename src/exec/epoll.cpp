@@ -57,7 +57,7 @@ static bool addNewConnection(int server_fd, ServerConfig &configuration)
 
     Conversation conversation;
     conversation.fd = client_fd;
-    conversations.insert({client_fd, conversation});
+    conversations.insert(std::make_pair(client_fd, conversation));
     conversations[client_fd].conf = &configuration;
 
     conversations[client_fd].state = READ_CLIENT;
@@ -175,8 +175,9 @@ void print_conversation_infos(int fd)
     printf("////////DEBUG START///////\n");
     printf("Method:%s\n", conversations[fd].req.method.c_str());
     printf("Uri:%s\n", conversations[fd].req.uri.c_str());
-    for(const auto &pair : conversations[fd].req.header)
-        printf("Headers:%s %s\n", pair.first.c_str(), pair.second.c_str());
+    for (std::map<std::string, std::string>::const_iterator it = conversations[fd].req.header.begin();
+            it != conversations[fd].req.header.end(); ++it)
+        printf("Headers:%s %s\n", it->first.c_str(), it->second.c_str());
     printf("PathOnDisk:%s\n", conversations[fd].req.pathOnDisk.c_str());
     printf("Body:%s\n", conversations[fd].req.body.c_str());
     printf("HasQuery:%d\n", conversations[fd].req.hasQuery);
@@ -292,12 +293,13 @@ void add_server_port_to_epoll(int server_fd)
 
 bool is_server_connection(int event_fd)
 {
-    for(auto &pair : server_configs)
+    for (std::map<int, ServerConfig>::iterator it = server_configs.begin();
+            it != server_configs.end(); ++it)
     {
-        int server_fd = pair.first;
+        int server_fd = it->first;
         if (event_fd == server_fd)
         {
-            addNewConnection(server_fd, pair.second);
+            addNewConnection(server_fd, it->second);
             return true;
         }
     }
@@ -360,22 +362,25 @@ void main_loop()
 
 int main(int argc, char **argv)
 {
+    (void)argc;
     signal(SIGINT, handle_sigint);
     std::map<int, ServerConfig> configurations;
     
     configurations = parseConfig(argv[1]);
     epoll_fd = epoll_create1(0);
-    for(auto &pair : configurations)
+    for (std::map<int, ServerConfig>::const_iterator it = configurations.begin();
+            it != configurations.end(); ++it)
     {
-        int server_fd = create_server_socket(pair.second.port);
-        server_configs[server_fd] = pair.second;
+        int server_fd = create_server_socket(it->second.port);
+        server_configs[server_fd] = it->second;
         add_server_port_to_epoll(server_fd);
     }
     
     main_loop();
 
-    for(auto &pair : server_configs)
-        close(pair.first);
+    for (std::map<int, ServerConfig>::const_iterator it = server_configs.begin();
+            it != server_configs.end(); ++it)
+        close(it->first);
     
     close(epoll_fd);
     return 0;

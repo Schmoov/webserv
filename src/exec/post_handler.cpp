@@ -120,7 +120,9 @@ std::string fork_process(Conversation &conversation, std::string binary_path)
         if(conversation.req.pathOnDisk != "")
             script_name = "SCRIPT_NAME=" + conversation.req.pathOnDisk.substr(conversation.req.pathOnDisk.rfind('/') + 1);
         std::string server_name = "SERVER_NAME=" + conversation.conf->host;
-        std::string server_port = "SERVER_PORT=" + std::to_string(conversation.conf->port);
+        std::ostringstream stream_string;
+        stream_string << conversation.conf->port;
+        std::string server_port = "SERVER_PORT=" + stream_string.str();
         std::string server_protocol = "SERVER_PROTOCOL=HTTP/1.1";
         std::string server_software = "SERVER_SOFTWARE=webserv/1.1";
         
@@ -177,8 +179,8 @@ std::string fork_process(Conversation &conversation, std::string binary_path)
         cgi_infos.written = 0;
         cgi_infos.to_write = &conversation.req.body;
 
-        conversations_cgi_in.insert({fd_in, &conversation});
-        conversations_cgi_out.insert({fd_out, &conversation});
+        conversations_cgi_in.insert(std::make_pair(fd_in, &conversation));
+        conversations_cgi_out.insert(std::make_pair(fd_out, &conversation));
 
         return "";
     }

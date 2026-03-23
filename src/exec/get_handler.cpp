@@ -26,7 +26,7 @@ static std::string directoryListing(const std::string& path, bool shouldClose)
 
 static std::string getMime(std::string path)
 {
-    int pos = path.find_last_of('.');
+    std::size_t pos = path.find_last_of('.');
     if(pos == std::string::npos)
         return "application/octet-stream";
     if(pos + 1 >= path.size())
