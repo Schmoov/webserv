@@ -6,11 +6,8 @@ std::string execute(Conversation &conversation)
     StatusCode status = conversation.resp.status;
     bool shouldClose = conversation.resp.shouldClose;
 
-    /*if(status != NOT_A_STATUS_CODE)
-    {
-        std::cout << "HERE" << shouldClose << std::endl;
+    if(status != NOT_A_STATUS_CODE)
         return createErrorResponse(status, shouldClose);
-    }*/
 
 
     if(request.method == "GET")
