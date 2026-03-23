@@ -23,9 +23,6 @@ std::map<int, Conversation *> conversations_cgi_out;
 
 std::map<int, ServerConfig> server_configs;
 
-
-std::map<int, ServerConfig> configurations;
-
 void handle_sigint(int sig)
 {
     (void)sig;
@@ -40,7 +37,7 @@ std::string adress_to_string(uint32_t adress)
     return ip.str();
 }
 
-static bool addNewConnection(int server_fd, int port)
+static bool addNewConnection(int server_fd, ServerConfig &configuration)
 {
     struct sockaddr_in client_addr;
     socklen_t len = sizeof(client_addr);
@@ -61,7 +58,7 @@ static bool addNewConnection(int server_fd, int port)
     Conversation conversation;
     conversation.fd = client_fd;
     conversations.insert({client_fd, conversation});
-    conversations[client_fd].conf = &configurations[port];
+    conversations[client_fd].conf = &configuration;
 
     conversations[client_fd].state = READ_CLIENT;
     conversations[client_fd].client_adress = adress_to_string(client_adress);
@@ -300,7 +297,7 @@ bool is_server_connection(int event_fd)
         int server_fd = pair.first;
         if (event_fd == server_fd)
         {
-            addNewConnection(server_fd, pair.second.port);
+            addNewConnection(server_fd, pair.second);
             return true;
         }
     }
@@ -361,9 +358,10 @@ void main_loop()
     }
 }
 
-int main(int agrc, char **argv)
+int main(int argc, char **argv)
 {
     signal(SIGINT, handle_sigint);
+    std::map<int, ServerConfig> configurations;
     
     configurations = parseConfig(argv[1]);
     epoll_fd = epoll_create1(0);
