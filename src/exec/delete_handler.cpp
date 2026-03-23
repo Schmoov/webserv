@@ -18,11 +18,12 @@ static std::string createDeleteResponseBody(StatusCode code, bool shouldClose)
     std::ostringstream response;
     std::string message = resolveStatusText(code);
     response << "<html><body><h1>" << code << " " << message << "</h1></body></html>";
-    return createResponse(code, response.str(), "text/html", shouldClose);
+    return createDeleteResponse(code, response.str(), "text/html", shouldClose);
 }
 
 std::string handleDelete(Conversation &conversation)
 {
+    std::cout << "[DELETE] on fd:" << conversation.fd << std::endl;
     Request request = conversation.req;
     std::string uri = request.uri;
     StatusCode code;

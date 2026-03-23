@@ -188,6 +188,7 @@ std::string fork_process(Conversation &conversation, std::string binary_path)
 
 std::string handlePost(Conversation &conversation)
 {
+    std::cout << "[POST] on fd:" << conversation.fd << std::endl;
     bool shouldClose = conversation.resp.shouldClose;
     printf("/////////////////////PATH%s\n", conversation.req.pathOnDisk.c_str());
     if(isFile(conversation.req.pathOnDisk) != OK)

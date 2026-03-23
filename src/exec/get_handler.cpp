@@ -42,6 +42,7 @@ static std::string getMime(std::string path)
 
 std::string handleGet(Conversation &conversation)
 {
+    std::cout << "[GET] on fd:" << conversation.fd << std::endl;
     Request request = conversation.req;
     std::string pathOnDisk = request.pathOnDisk;
     StatusCode code;
