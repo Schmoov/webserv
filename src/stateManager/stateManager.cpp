@@ -46,10 +46,10 @@ void manage(Conversation& conv) {
 		if (conv.state == PARSE || conv.state == PARSE_BODY
 				|| conv.state == EOF_CLIENT)
 			conv.parser->parse(conv);
-		std::cout << "Parse State enter: " << state_to_str(conv.state).c_str() << std::endl;;
+		std::cout << "Parse State after parse: " << state_to_str(conv.state).c_str() << std::endl;;
 		if (conv.state == VALIDATE)
 			conv.validator->validate(conv);
-		std::cout << "Parse State enter: " << state_to_str(conv.state).c_str() << std::endl;;
+		std::cout << "Parse State after validate: " << state_to_str(conv.state).c_str() << std::endl;;
 		if (conv.state == READ_CLIENT
 				|| conv.state == WRITE_CLIENT
 				|| conv.state == FINISH || conv.state == EXEC)
