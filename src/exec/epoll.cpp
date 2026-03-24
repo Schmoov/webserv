@@ -319,18 +319,6 @@ void main_loop()
 
     while (keep_running)
     {
-        for (std::map<int, Conversation>::iterator it = conversations.begin();
-            it != conversations.end(); ++it)
-        {
-
-            std::time_t time_passed = std::time(NULL) - it->second.timeStamp;
-            if(time_passed > TIMEOUT)
-            {
-                conversations.erase(it->second.fd);
-                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second.fd, NULL);
-                close(it->second.fd);
-            }
-        }
         int number_of_events = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
 
         if (number_of_events == -1)
@@ -375,6 +363,24 @@ void main_loop()
                 if(drain_cgi(fd))
                         continue;
                 close_conversation_cgi(fd);
+            }
+        }
+
+        for (std::map<int, Conversation>::iterator it = conversations.begin();
+            it != conversations.end();)
+        {
+
+            std::time_t time_passed = std::time(NULL) - it->second.timeStamp;
+            if(time_passed > TIMEOUT)
+            {
+                int fd = it->second.fd;
+                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second.fd, NULL);
+                conversations.erase(it++);
+                close(fd);
+            }
+            else
+            {   
+                ++it;
             }
         }
     }
