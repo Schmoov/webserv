@@ -7,6 +7,7 @@
 #include "../../inc/validate/Validator.hpp"
 
 #define MAX_EVENTS  10
+#define TIMEOUT     3
 
 #include <signal.h>
 
@@ -62,6 +63,7 @@ static bool addNewConnection(int server_fd, ServerConfig &configuration)
 
     conversations[client_fd].state = READ_CLIENT;
     conversations[client_fd].client_adress = adress_to_string(client_adress);
+    conversations[client_fd].timeStamp = std::time(NULL);
 
     printf("\t[NEW]  Client connected! Client adress is:%s on fd=%d\n", conversations[client_fd].client_adress.c_str(), client_fd);
     return true;
@@ -127,6 +129,7 @@ bool read_cgi(int fd)
         Conversation *conversation = conversations_cgi_out[fd];
         Cgi &cgi_infos = conversation->resp.cgi_infos;
         
+        conversation->timeStamp = std::time(NULL);
         printf("\t\t[READ]  CGI READ fd=%d associated with client %d\n", fd, conversation->fd);
         if(readCgiOutput(fd, *conversation))
         {
@@ -217,6 +220,7 @@ void execute(int fd)
 bool read_client(int fd)
 {
     printf("\t\t[READ]  CLIENT READ fd=%d\n", fd);
+    conversations[fd].timeStamp = std::time(NULL);
     manage(conversations[fd]);
     if(conversations[fd].state == FINISH)
     {
@@ -243,6 +247,8 @@ bool write_cgi(int fd)
         Conversation *conversation = conversations_cgi_in[fd];
         Cgi &cgi = conversation->resp.cgi_infos;
         std::string &to_write = *cgi.to_write;
+        
+        conversation->timeStamp = std::time(NULL);
         const char *left_to_write = to_write.c_str() + cgi.written;
         size_t length = to_write.size() - cgi.written;
 
@@ -331,6 +337,17 @@ void main_loop()
             printf("[EVENT] on fd %d\n", fd);
             if(is_server_connection(fd))
                 continue;
+            
+            if(conversations.count(fd))
+            {
+                std::time_t time_passed = std::time(NULL) - conversations[fd].timeStamp;
+                if(time_passed > TIMEOUT)
+                {
+                    conversations.erase(fd);
+                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+                    close(fd);
+                }
+            }
             
             if (events[i].events & EPOLLIN)
             {

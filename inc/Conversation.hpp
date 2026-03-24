@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include "config.hpp"
 #include "sys/types.h"
+#include <ctime>
 
 class Request {
 public:
@@ -62,6 +63,7 @@ public:
 	ConvState state;
 	std::string buf;
 	std::string client_adress;
+	std::time_t	timeStamp;
 
 	Parser *parser;
 	Reader *reader;
