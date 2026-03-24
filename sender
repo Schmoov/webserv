@@ -1,10 +1,10 @@
 #!/bin/bash
 {
-    echo -ne "POST /cgi-bin/wiki.py HTTP/1.1\r\n"
-    echo -ne "Host: localhost\r\n"
-    echo -ne "Connection: close\r\n"
-    echo -ne "Content-Length: 6\r\n"
-    echo -ne "\r\n"
+    echo -ne "POST /cgi-bin/wiki.py HTTP/1.1\n"
+    echo -ne "Host: localhost\n"
+    echo -ne "Connection: close\n"
+    echo -ne "Content-Length: 6\n"
+    echo -ne "\n"
     sleep 0.5
     echo -ne "Hello\n"
 } | nc localhost 8080
