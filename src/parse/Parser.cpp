@@ -13,10 +13,8 @@ void Parser::parseStartLine(Conversation& conv) {
 	while (!s.compare(0, 2, "\r\n"))
 		s.erase(0, 2);
 	size_t pos = s.find("\r\n");
-	if (pos == npos && s.size() <= startLineMax) {
-		conv.state = READ_CLIENT;
+	if (pos == npos && s.size() <= startLineMax)
 		return;
-	}
 	if ((pos != npos && pos > startLineMax)
 			|| pos == npos) {
 		handleHugeStart(conv);
@@ -89,10 +87,8 @@ void Parser::parseBodyChunked(Conversation& conv) {
 			return earlyResponse(conv, ENTITY_TOO_LARGE);
 		}
 
-		if (s.size() - (pos + 2) < chunkSize + 2) {
-			conv.state = READ_CLIENT;
+		if (s.size() - (pos + 2) < chunkSize + 2)
 			return;
-		}
 		extractSize(s, 16);
 		deleteChunkExt(s);
 
