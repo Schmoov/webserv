@@ -92,9 +92,7 @@ std::string fork_process(Conversation &conversation, std::string binary_path)
         if(close(pipe_out[1]) != 0)
             _exit(1);
         
-        char *args[] = {const_cast<char *>("/bin/python3"), const_cast<char *>(conversation.req.pathOnDisk.c_str()), NULL};
-        std::string path("/bin/python3");
-        
+        char *args[] = {const_cast<char *>(binary_path.c_str()), const_cast<char *>(conversation.req.pathOnDisk.c_str()), NULL};
         
         int length = conversation.req.body.size();
         std::ostringstream length_str;
