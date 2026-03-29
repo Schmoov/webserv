@@ -35,6 +35,7 @@ struct Cgi
 
 struct Response {
 	StatusCode status; // Used by parse to communicate failure
+	size_t written;
 	bool shouldClose;
 	std::string location;
 	std::string content;
@@ -45,7 +46,7 @@ struct Response {
 	std::string body;
 	*/
 	
-	Response() : status(NOT_A_STATUS_CODE), shouldClose(false) {}
+	Response() : status(NOT_A_STATUS_CODE), shouldClose(false), written(0) {}
 };
 
 //Forward declaration + pointer to respect include hierarchy

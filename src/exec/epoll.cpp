@@ -42,9 +42,7 @@ static bool addNewConnection(int server_fd, ServerConfig &configuration)
 {
     struct sockaddr_in client_addr;
     socklen_t len = sizeof(client_addr);
-    int client_fd = accept(server_fd,
-        (struct sockaddr *)&client_addr, &len);
-
+    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
     if (client_fd == -1)
         return false;
 
@@ -54,7 +52,11 @@ static bool addNewConnection(int server_fd, ServerConfig &configuration)
 
     event.events  = EPOLLIN;
     event.data.fd = client_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event);
+    if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event))
+    {
+        close(client_fd);
+        return false;
+    }
 
     Conversation conversation;
     conversation.fd = client_fd;
@@ -75,6 +77,8 @@ static bool readCgiOutput(int cgi_fd, Conversation &conversation)
     char buffer[50];
     ssize_t r;
     r = read(cgi_fd, buffer, sizeof(buffer));
+    if(r == -1)
+        return false;
     cgi_infos.raw_output.append(buffer, r);
     printf("\t\t[READ] buffer:%s\n", buffer);
     if(r == 0)
@@ -90,9 +94,14 @@ static void endReadCgiOutput(Conversation &conversation, Cgi &cgi_infos, int cgi
 
     int status;
 
-    waitpid(cgi_infos.pid, &status, 0);
+    int returned = waitpid(cgi_infos.pid, &status, WNOHANG);
+    if(returned == 0)
+    {
+        kill(cgi_infos.pid, SIGKILL);
+        waitpid(cgi_infos.pid, &status, 0);
+    }
     Response &response = conversation.resp;
-    if((WIFEXITED(status) && WEXITSTATUS(status) != 0))
+    if((returned == -1 || (WIFEXITED(status) && WEXITSTATUS(status) != 0)))
         response.content = createErrorResponse(INTERNAL_SERVER_ERROR, conversation.resp.shouldClose);
     else
         response.content = createCGIResponse(conversation, cgi_infos.raw_output);
@@ -141,6 +150,17 @@ bool read_cgi(int fd)
     return false;
 }
 
+void close_conversation(int fd)
+{
+    int cgi_in = conversations[fd].resp.cgi_infos.pipe_in;
+    int cgi_out = conversations[fd].resp.cgi_infos.pipe_out;
+    if(conversations_cgi_in.count(cgi_in))
+        conversations_cgi_in.erase(cgi_in);
+    if(conversations_cgi_out.count(cgi_out))
+        conversations_cgi_out.erase(cgi_out);
+    conversations.erase(fd);
+}
+
 void close_conversation_cgi(int fd)
 {
     printf("[END CONVERSATION] EPOLLHUP|EPOLLERR client fd:%d\n", fd);
@@ -149,7 +169,7 @@ void close_conversation_cgi(int fd)
     if(conversations_cgi_out.count(fd))
         conversations_cgi_out.erase(fd);
     if(conversations.count(fd))
-        conversations.erase(fd);
+        close_conversation(fd);
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
 }
@@ -157,13 +177,26 @@ void close_conversation_cgi(int fd)
 bool send_and_close_if_needed(int fd)
 {
     printf("[EPOLLOUT] send and check close\n");
-    send(fd, conversations[fd].resp.content.c_str(), conversations[fd].resp.content.size(), 0);
+
+    Response &response = conversations[fd].resp;
+    const char *to_write = response.content.c_str() + response.written;
+    size_t left_to_write = response.content_size - response.written;
+
+
+    ssize_t n = send(fd, to_write, left_to_write, 0);
+
+    if(n > 0)
+        response.written += n;
+    if(response.written < response.content_size)
+        return false;
+
+    response.written = 0;
     if(conversations[fd].resp.shouldClose)
     {
         printf("[CLOSE] fd:%d\n", fd);
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
         close(fd);
-        conversations.erase(fd);
+        close_conversation(fd);
         return true;
     }
     event.events  = EPOLLIN;
@@ -227,7 +260,7 @@ bool read_client(int fd)
         printf("[CLOSE] fd:%d\n", fd);
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
         close(fd);
-        conversations.erase(fd);
+        close_conversation(fd);
         return false;
     }
     if (conversations[fd].state == EXEC) 
@@ -271,8 +304,11 @@ bool write_cgi(int fd)
 int create_server_socket(int port)
 {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(server_fd == -1)
+        std::exit(1);
     int opt = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+        std::exit(1);
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -280,21 +316,28 @@ int create_server_socket(int port)
     addr.sin_port   = htons(port);
     addr.sin_addr.s_addr = /*INADDR_ANY*/inet_addr("127.0.0.1");
 
-    bind(server_fd, (struct sockaddr *)&addr, sizeof(addr));
-    listen(server_fd, 5);
+    if(bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)))
+        std::exit(1);
+    if(listen(server_fd, 5))
+        std::exit(1);
     fcntl(server_fd, F_SETFL, fcntl(server_fd, F_GETFL) | O_NONBLOCK);
     printf("[SETUP] Server listening on port %d\n", port);
     return server_fd;
 }
 
-void add_server_port_to_epoll(int server_fd)
+bool add_server_port_to_epoll(int server_fd)
 {
     printf("[SETUP] epoll_fd = %d\n\n", epoll_fd);
 
     event.events  = EPOLLIN;
     event.data.fd = server_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event);
-    printf("[SETUP] Added server_fd=%d to epoll (watching EPOLLIN)\n\n", server_fd);
+    if(!epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event))
+    {
+        printf("[SETUP] Added server_fd=%d to epoll (watching EPOLLIN)\n\n", server_fd);
+        return true;
+    }
+    else 
+        return false;
 }
 
 bool is_server_connection(int event_fd)
@@ -353,9 +396,7 @@ void main_loop()
                 printf("\t[TRIGGER]  EPOLLOUT fd=%d\n", fd);
                 if(write_cgi(fd))
                     continue;
-
-                if(!send_and_close_if_needed(fd))
-                    conversations[fd].state = READ_CLIENT;
+                send_and_close_if_needed(fd);
             }
             if(events[i].events & (EPOLLHUP | EPOLLERR))
             {
@@ -375,7 +416,8 @@ void main_loop()
             {
                 int fd = it->second.fd;
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second.fd, NULL);
-                conversations.erase(it++);
+                ++it;
+                close_conversation(fd);
                 close(fd);
             }
             else
@@ -390,6 +432,7 @@ int main(int argc, char **argv)
 {
     (void)argc;
     signal(SIGINT, handle_sigint);
+    signal(SIGPIPE, SIG_IGN);
     std::map<int, ServerConfig> configurations;
     
     configurations = parseConfig(argv[1]);
@@ -399,7 +442,8 @@ int main(int argc, char **argv)
     {
         int server_fd = create_server_socket(it->second.port);
         server_configs[server_fd] = it->second;
-        add_server_port_to_epoll(server_fd);
+        if(!add_server_port_to_epoll(server_fd))
+            break;
     }
     
     main_loop();
